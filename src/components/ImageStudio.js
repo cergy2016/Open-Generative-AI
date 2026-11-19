@@ -1,3 +1,4 @@
+import { KDP_PRESETS, nearestAspectRatio, showPresetNotice } from '../lib/kdpPresets.js';
 import { muapi } from '../lib/muapi.js';
 import {
     t2iModels, getAspectRatiosForModel, getResolutionsForModel, getQualityFieldForModel,
@@ -870,6 +871,32 @@ export function ImageStudio() {
                 list.appendChild(item);
             });
             dropdown.appendChild(list);
+
+            const presetHead = document.createElement('div');
+            presetHead.className = 'text-[10px] font-bold text-muted uppercase tracking-widest px-3 py-2 border-t border-white/5 mt-2';
+            presetHead.textContent = 'Book and KDP presets';
+            dropdown.appendChild(presetHead);
+            const presetList = document.createElement('div');
+            presetList.className = 'flex flex-col gap-1';
+            KDP_PRESETS.forEach(p => {
+                const match = nearestAspectRatio(p, availableArs);
+                if (!match) return;
+                const item = document.createElement('div');
+                item.className = 'flex flex-col p-3 hover:bg-white/5 rounded-2xl cursor-pointer transition-all';
+                item.innerHTML = `
+                    <span class="text-xs font-bold text-white opacity-80">${p.label}</span>
+                    <span class="text-[10px] text-muted">${p.target} · uses ${match}</span>
+                `;
+                item.onclick = (e) => {
+                    e.stopPropagation();
+                    selectedAr = match;
+                    document.getElementById('ar-btn-label').textContent = match;
+                    closeDropdown();
+                    showPresetNotice(`${p.label}: generating at ${match}. Upscale to ${p.target} before uploading.`);
+                };
+                presetList.appendChild(item);
+            });
+            dropdown.appendChild(presetList);
         } else if (type === 'quality') {
             dropdown.classList.add('max-w-[200px]');
             dropdown.innerHTML = `<div class="text-[10px] font-bold text-secondary uppercase tracking-widest px-3 py-2 border-b border-white/5 mb-2">Resolution</div>`;

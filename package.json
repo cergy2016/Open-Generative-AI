@@ -1,6 +1,6 @@
 {
-  "name": "open-generative-ai",
-  "description": "Open-source alternative to HF AI — AI image, video, cinema and lip sync studio",
+  "name": "chung-studio",
+  "description": "Chung Studio: AI image and video studio for book covers and KDP images (fork of Open Generative AI, MIT)",
   "homepage": "https://github.com/Anil-matcha/Open-Generative-AI",
   "private": true,
   "version": "2.0.0",
@@ -39,9 +39,9 @@
     "electron:build:all": "vite build && electron-builder --mac --win --linux"
   },
   "build": {
-    "appId": "ai.generative.open",
-    "productName": "Open Generative AI",
-    "copyright": "Copyright © 2025",
+    "appId": "fr.chungbooks.studio",
+    "productName": "Chung Studio",
+    "copyright": "Copyright © 2026 Chung Books. Based on Open Generative AI (MIT).",
     "directories": {
       "output": "release"
     },
@@ -93,7 +93,7 @@
     "linux": {
       "icon": "public/banner.png",
       "category": "Utility",
-      "maintainer": "Open Generative AI Team",
+      "maintainer": "Chung Books",
       "extraFiles": [
         {
           "from": "build/linux/apparmor.profile",

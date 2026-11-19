@@ -26,16 +26,17 @@ export function Header(navigate) {
         </div>
     `;
 
+    const brand = document.createElement('span');
+    brand.className = 'text-white text-sm font-black tracking-tight hidden md:inline';
+    brand.textContent = 'Chung Studio';
+    logoContainer.classList.add('flex', 'items-center', 'gap-3');
+    logoContainer.appendChild(brand);
+
     const menu = document.createElement('nav');
     menu.className = 'hidden lg:flex items-center gap-6 text-[13px] font-bold text-secondary';
     const items = [
         { label: t('nav.image'),   page: 'image' },
         { label: t('nav.video'),   page: 'video' },
-        { label: t('nav.lipsync'), page: 'lipsync' },
-        { label: t('nav.cinema'),  page: 'cinema' },
-        { label: t('nav.workflows'), page: 'workflows' },
-        { label: t('nav.agents'),  page: 'agents' },
-        { label: t('nav.mcpcli'),  page: 'mcp-cli' },
     ];
 
     items.forEach(({ label, page }, idx) => {
