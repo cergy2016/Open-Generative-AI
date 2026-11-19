@@ -1,0 +1,9 @@
+{
+  "framework": null,
+  "installCommand": "npm install -w packages/studio --include-workspace-root --ignore-scripts",
+  "buildCommand": "npx vite build",
+  "outputDirectory": "dist",
+  "rewrites": [
+    { "source": "/api/:path*", "destination": "https://api.muapi.ai/api/:path*" }
+  ]
+}

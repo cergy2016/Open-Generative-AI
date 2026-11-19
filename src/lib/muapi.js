@@ -14,7 +14,10 @@ export function formatApiError(status, statusText, errText = '') {
 export class MuapiClient {
     constructor() {
         // Ideally user provides this in settings
-        this.baseUrl = (typeof import.meta !== 'undefined' && import.meta.env?.DEV) ? '' : 'https://api.muapi.ai';
+        // Dev server and the web deploy (Vercel) go through a same-origin /api proxy.
+        // The Electron app loads from file:// and calls Muapi directly.
+        const isWeb = typeof window !== 'undefined' && /^https?:$/.test(window.location.protocol);
+        this.baseUrl = ((typeof import.meta !== 'undefined' && import.meta.env?.DEV) || isWeb) ? '' : 'https://api.muapi.ai';
     }
 
     getKey() {
