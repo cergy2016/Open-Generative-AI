@@ -1,4 +1,5 @@
 import { KDP_PRESETS, nearestAspectRatio, showPresetNotice } from '../lib/kdpPresets.js';
+import { CF_MODEL_ID, CF_MODEL_NAME, hasCloudflareCreds, generateCloudflareImage } from '../lib/cloudflareImage.js';
 import { muapi } from '../lib/muapi.js';
 import {
     t2iModels, getAspectRatiosForModel, getResolutionsForModel, getQualityFieldForModel,
@@ -68,9 +69,9 @@ export function ImageStudio() {
     let showToolsPanel = false;
 
     const getCurrentModels = () => imageMode ? i2iModels : t2iModels;
-    const getCurrentAspectRatios = (id) => imageMode ? getAspectRatiosForI2IModel(id) : getAspectRatiosForModel(id);
-    const getCurrentResolutions = (id) => imageMode ? getResolutionsForI2IModel(id) : getResolutionsForModel(id);
-    const getCurrentQualityField = (id) => imageMode ? getQualityFieldForI2IModel(id) : getQualityFieldForModel(id);
+    const getCurrentAspectRatios = (id) => id === CF_MODEL_ID ? ['1:1'] : (imageMode ? getAspectRatiosForI2IModel(id) : getAspectRatiosForModel(id));
+    const getCurrentResolutions = (id) => id === CF_MODEL_ID ? [] : (imageMode ? getResolutionsForI2IModel(id) : getResolutionsForModel(id));
+    const getCurrentQualityField = (id) => id === CF_MODEL_ID ? null : (imageMode ? getQualityFieldForI2IModel(id) : getQualityFieldForModel(id));
 
     // ==========================================
     // 1. HERO SECTION
@@ -797,7 +798,9 @@ export function ImageStudio() {
                 }
 
                 // ── Remote (API) model list ───────────────────────────────────
-                const filtered = getCurrentModels().filter(m => m.name.toLowerCase().includes(filter.toLowerCase()) || m.id.toLowerCase().includes(filter.toLowerCase()));
+                const cfEntry = { id: CF_MODEL_ID, name: CF_MODEL_NAME, family: 'cloudflare' };
+                const baseModels = imageMode ? getCurrentModels() : [cfEntry, ...getCurrentModels()];
+                const filtered = baseModels.filter(m => m.name.toLowerCase().includes(filter.toLowerCase()) || m.id.toLowerCase().includes(filter.toLowerCase()));
 
                 filtered.forEach(m => {
                     const item = document.createElement('div');
@@ -1053,7 +1056,9 @@ export function ImageStudio() {
         generationHistory.unshift(entry);
 
         // Save to localStorage
-        localStorage.setItem('muapi_history', JSON.stringify(generationHistory.slice(0, 50)));
+        try {
+            localStorage.setItem('muapi_history', JSON.stringify(generationHistory.filter(e => !String(e.url).startsWith('blob:')).slice(0, 50)));
+        } catch (err) { /* ignore storage errors */ }
 
         // Show sidebar
         historySidebar.classList.remove('translate-x-full', 'opacity-0');
@@ -1273,6 +1278,40 @@ export function ImageStudio() {
             } finally {
                 generateBtn.disabled = false;
                 if (!hadError) generateBtn.innerHTML = t('common.generate');
+            }
+            return;
+        }
+
+        // ── Cloudflare (free) path ────────────────────────────────────────────
+        if (selectedModel === CF_MODEL_ID && !imageMode) {
+            if (!hasCloudflareCreds()) {
+                generateBtn.textContent = 'Add your Cloudflare Account ID and token in Settings';
+                setTimeout(() => { generateBtn.innerHTML = t('common.generate'); }, 4000);
+                return;
+            }
+            hero.classList.add('opacity-0', 'scale-95', '-translate-y-10', 'pointer-events-none');
+            generateBtn.disabled = true;
+            generateBtn.innerHTML = `<span class="animate-spin inline-block mr-2 text-black">◌</span> Generating...`;
+            let cfError = false;
+            try {
+                const url = await generateCloudflareImage({ prompt });
+                addToHistory({
+                    id: Date.now().toString(),
+                    url,
+                    prompt,
+                    model: CF_MODEL_ID,
+                    aspect_ratio: '1:1',
+                    timestamp: new Date().toISOString()
+                });
+                showImageInCanvas(url);
+            } catch (e) {
+                cfError = true;
+                hero.classList.remove('opacity-0', 'scale-95', '-translate-y-10', 'pointer-events-none');
+                generateBtn.textContent = `Error: ${String(e.message).slice(0, 100)}`;
+                setTimeout(() => { generateBtn.innerHTML = t('common.generate'); }, 5000);
+            } finally {
+                generateBtn.disabled = false;
+                if (!cfError) generateBtn.innerHTML = t('common.generate');
             }
             return;
         }

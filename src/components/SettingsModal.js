@@ -61,6 +61,24 @@ export function SettingsModal(onClose) {
             <p style="font-size:0.7rem;color:rgba(255,255,255,0.3);margin:0;">
                 ${t('settings.keyNote')}
             </p>
+            <div style="border-top:1px solid rgba(255,255,255,0.06);padding-top:0.75rem;display:flex;flex-direction:column;gap:0.6rem;">
+                <label style="display:block;font-size:0.75rem;color:rgba(255,255,255,0.5);font-weight:600;">Cloudflare (free images, FLUX schnell)</label>
+                <input id="settings-cf-account" type="text" autocomplete="off"
+                    style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:0.75rem;padding:0.6rem 0.9rem;color:#fff;font-size:0.875rem;outline:none;"
+                    placeholder="Cloudflare Account ID"
+                    value="${localStorage.getItem('cf_account_id') || ''}">
+                <input id="settings-cf-token" type="password" autocomplete="off"
+                    style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:0.75rem;padding:0.6rem 0.9rem;color:#fff;font-size:0.875rem;outline:none;"
+                    placeholder="Cloudflare API token (Workers AI)"
+                    value="${localStorage.getItem('cf_api_token') || ''}">
+                <input id="settings-cf-proxy" type="text" autocomplete="off"
+                    style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:0.75rem;padding:0.6rem 0.9rem;color:#fff;font-size:0.875rem;outline:none;"
+                    placeholder="Mac app only: your site address, e.g. https://your-site.vercel.app"
+                    value="${localStorage.getItem('cf_proxy_url') || ''}">
+                <p style="font-size:0.7rem;color:rgba(255,255,255,0.3);margin:0;">
+                    Stored in this browser only. Sent to your own site's /api/cf-image, which forwards it to Cloudflare.
+                </p>
+            </div>
             <div style="display:flex;justify-content:flex-end;gap:0.5rem;margin-top:0.5rem;">
                 <button id="settings-cancel-btn" style="padding:0.5rem 1rem;border-radius:0.5rem;background:none;border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);font-size:0.75rem;font-weight:700;cursor:pointer;">${t('common.cancel')}</button>
                 <button id="settings-save-btn" style="padding:0.5rem 1rem;border-radius:0.5rem;background:var(--color-primary,#22d3ee);color:#000;font-size:0.75rem;font-weight:700;cursor:pointer;border:none;">${t('common.save')}</button>
@@ -102,12 +120,20 @@ export function SettingsModal(onClose) {
     apiPanel.querySelector('#settings-cancel-btn').onclick = close;
     apiPanel.querySelector('#settings-save-btn').onclick = () => {
         const key = apiPanel.querySelector('#settings-api-key').value.trim();
-        if (key) {
-            localStorage.setItem('muapi_key', key);
-            close();
-        } else {
+        const cfAccount = apiPanel.querySelector('#settings-cf-account').value.trim();
+        const cfToken = apiPanel.querySelector('#settings-cf-token').value.trim();
+        const cfProxy = apiPanel.querySelector('#settings-cf-proxy').value.trim();
+        if (!key && !(cfAccount && cfToken)) {
             alert(t('settings.invalidKey'));
+            return;
         }
+        if (key) localStorage.setItem('muapi_key', key);
+        if (cfAccount && cfToken) {
+            localStorage.setItem('cf_account_id', cfAccount);
+            localStorage.setItem('cf_api_token', cfToken);
+        }
+        if (cfProxy) localStorage.setItem('cf_proxy_url', cfProxy);
+        close();
     };
 
     header.querySelector('#settings-close-btn').onclick = close;
